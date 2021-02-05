@@ -56,6 +56,16 @@ ls model.tar.g* | xargs -n1 tar xzvf
 mkdir ~/bagfiles
 cd ~/bagfiles
 rosbag record -a
+rosbag record /topic1
+#确保识别的物体ID从1开始，远离门轴的二维码为1，门轴的二维码为2
+rosbag record /object_1/cmd_vel
+#运算门转角度数并发布(30 pfs)
+#存放位置~/sensor_ws/src/beginner_tutorials/src
+#tf.cpp表示追踪远离门轴的二维码
+rosrun beginner_tutorials tf_with2ar
+
+
+
 #回放
 rosbag info <your bagfile>
 rosbag play <your bagfile>
@@ -110,13 +120,6 @@ sudo route add default gw 10.192.0.1
 
 
 
-
-
-
-
-
-
-
 17 tf坐标变换
 #将当前的坐标系转换关系打印到终端控制台
 rosrun tf tf_monitor
@@ -124,10 +127,20 @@ rosrun tf tf_monitor
 rosrun tf tf_monitor /map /base_link
 #tf_echo <source_frame> <target_frame> ：把特定的坐标系之间的平移旋转关系，打印到终端控制台
 rosrun tf tf_echo /map /base_link
+#rosrun tf tf_echo kinect2_link object_10
 #发布一个父坐标系到子坐标系的静态tf转换，偏移x/y/z (单位是m)，旋转是欧拉角 yaw/pitch/roll (单位是弧度 rad)，这里 yaw是关于Z轴的旋转，pitch是关于关于Y轴的旋转，roll是关于X轴的旋转。这里的周期period_in_ms，是这个tf的发布周期，设置为100ms（也就是10hz）是一个很好的值。
 static_transform_publisher x y z yaw pitch roll frame_id child_frame_id period_in_ms
 -------------------------------------------
 原文链接：https://blog.csdn.net/qq_39779233/article/details/108215144
+
+
+
+18 获取门转角数据
+#文件路径~/sensor_ws/src/beginner_tutorials/src/tf.cpp
+rosrun beginner_tutorials my_tf_listener 
+rqt_plot
+#查看话题其中linear.x=OP，linear.x=OQ，linear.z=OQP_angle
+/object_2/cmd_vel/linear
 
 ==========================================================================
 

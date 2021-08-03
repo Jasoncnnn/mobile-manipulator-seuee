@@ -48,7 +48,10 @@ ls model.tar.g* | xargs -n1 tar xzvf
 --------------------------------------
 原文链接：https://blog.csdn.net/yang_guo_/article/details/89393712
 
-
+#Teamviewer 安装
+sudo dpkg -i teamviewer_15.20.3_amd64.deb
+#报错
+sudo apt-get --fix-broken install
 
 
 10 rosbag数据记录与回放
@@ -57,12 +60,85 @@ mkdir ~/bagfiles
 cd ~/bagfiles
 rosbag record -a
 rosbag record /topic1
-#确保识别的物体ID从1开始，远离门轴的二维码为1，门轴的二维码为2
-rosbag record /object_1/cmd_vel
-#运算门转角度数并发布(30 pfs)
-#存放位置~/sensor_ws/src/beginner_tutorials/src
-#tf.cpp表示追踪远离门轴的二维码
-rosrun beginner_tutorials tf_with2ar
+
+
+##aubo API 讲解
+ROS kinetic+MoveIt！控制aubo机械臂笔记一 搭建变成环境
+https://blog.csdn.net/peijian1998/article/details/114160080?spm=1001.2014.3001.5501
+ROS kinetic+MoveIt！控制aubo机械臂笔记二 连接机械臂
+https://blog.csdn.net/peijian1998/article/details/115750871?spm=1001.2014.3001.5501
+ROS kinetic+MoveIt！控制aubo机械臂笔记三 MoveIt! C++示例
+https://blog.csdn.net/peijian1998/article/details/115750993?spm=1001.2014.3001.5501
+ROS kinetic+MoveIt！控制aubo机械臂笔记四 aubo开源代码底层机制
+https://blog.csdn.net/peijian1998/article/details/115751065?spm=1001.2014.3001.5501
+aubo机械臂控制方式
+https://blog.csdn.net/peijian1998/article/details/115751151?spm=1001.2014.3001.5501
+aubo机械臂利用AUBO-API而不是moveit!控制方式
+https://gitee.com/ME1106/aubo_-ros
+
+
+
+
+##aubo GUI 讲解
+# 三种方法在ROS中加载Qt库进行GUI设计
+https://blog.csdn.net/u014610460/article/details/79355533
+# 蒋程扬 ROS机器人GUI程序开发
+https://blog.csdn.net/qq_38441692/category_9863968.html
+
+##ROS Qt5 librviz人机交互界面开发
+https://blog.csdn.net/qq_38441692/article/details/105158790
+git clone https://github.com/chengyangkj/Ros_Qt5_Gui_App.git
+#关节控制joint-state-publisher-gui
+sudo apt-get install ros-kinetic-joint-state-publisher-gui
+#末端控制joint-state-publisher-gui
+sudo apt-get install ros-kinetic-open-manipulator-control-gui
+#GUI 命令
+rosrun rqt_plot rqt_plot   #画出发布在topic上的数据变化图
+rqt_plot
+rosrun rqt_graph rqt_graph   #画出node关系图
+rosrun rqt_console rqt_console #属于ROS日志框架(logging framework)的一部分，用来显示节点的输出信息
+rosrun rqt_logger_level rqt_logger_level #允许我们修改节点运行时输出信息的日志等级（logger levels）
+rosrun rqt_tf_tree rqt_tf_tree #实时监控坐标系收听关系的工具，点击refersh来刷新
+rosrun image_view image_view image:=/camera #使用image_view在窗口中展示给定主题的图像，还可以通过图形界面上的按钮将图片保存到硬盘里
+rosrun rqt_image_view rqt_image_view #使用rqt_image_view，还可以在一个窗口中查看多个图像
+rosbag record -a #记录所有的主题
+rosbag record /image_raw #记录特定的主题 
+rosbag info 消息记录文件.bag#看到创建的日期、 持续时间、文件大小， 以及内部消息的数量和文件的压缩格式（如果有压缩） 。 然后， 我们还会有文件内部数据类型的列表。 最后有主题的列表， 并它们对应的名称、 消息数量和类型。
+rqt_bag <your bagfile> #实时显示相机的bag包
+---------------------------
+https://www.guyuehome.com/34172
+
+
+
+
+## openmanipulator demo
+#OpenManipulator机械臂入门教程 https://www.ncnynl.com/archives/201903/2850.html
+sudo apt-get install ros-kinetic-ros-controllers ros-kinetic-gazebo* ros-kinetic-moveit* ros-kinetic-industrial-core
+mkdir -p ~/openManipulator_ws/src/ && cd ~/openManipulator_ws/src/
+git clone https://github.com/ROBOTIS-GIT/DynamixelSDK.git
+git clone https://github.com/ROBOTIS-GIT/dynamixel-workbench.git
+git clone https://github.com/ROBOTIS-GIT/dynamixel-workbench-msgs.git
+git clone https://github.com/ROBOTIS-GIT/open_manipulator.git
+git clone https://github.com/ROBOTIS-GIT/open_manipulator_msgs.git
+git clone https://github.com/ROBOTIS-GIT/open_manipulator_simulations.git
+git clone https://github.com/ROBOTIS-GIT/robotis_manipulator.git
+git clone https://github.com/ROBOTIS-GIT/open_manipulator_applications.git
+git clone https://github.com/ROBOTIS-GIT/open_manipulator_controls.git
+cd ~/openManipulator_ws && catkin_make
+echo "source ~/openManipulator_ws/devel/setup.bash" >> ~/.bashrc
+source ~/.bashrc
+
+#由于是进行仿真将open_manipulator包下面的open_manipulator_controller文件夹下面的open_manipulator_controller.launch文件中
+#default="false"/>  <!-- true for actual, false for simulation -->
+
+roslaunch open_manipulator_controller open_manipulator_controller.launch
+roslaunch open_manipulator_description open_manipulator_rviz.launch
+roslaunch open_manipulator_control_gui open_manipulator_control_gui.launch
+————————————————
+原文链接：https://blog.csdn.net/qq_35813161/article/details/118677106
+
+
+
 
 
 
@@ -88,6 +164,8 @@ roslaunch aubo_i5_moveit_config moveit_planning_execution.launch robot_ip:=127.0
 cd ~/catkin_ws/src/aubo_robot/aubo_demo/scripts
 rosrun aubo_demo aubo_i5_ar_track.py
 ---------------------------------
+https://blog.csdn.net/yiranhaiziqi/article/details/53085096
+https://blog.csdn.net/mwlwlm/article/details/98626063
 https://www.guyuehome.com/6873
 
 
@@ -140,7 +218,15 @@ static_transform_publisher x y z yaw pitch roll frame_id child_frame_id period_i
 rosrun beginner_tutorials my_tf_listener 
 rqt_plot
 #查看话题其中linear.x=OP，linear.x=OQ，linear.z=OQP_angle
-/object_2/cmd_vel/linear
+/object_1/cmd_vel/linear
+#确保识别的物体ID从1开始，远离门轴的二维码为1，门轴的二维码为2
+rosbag record /object_1/cmd_vel
+#运算门转角度数并发布(30 pfs)
+#存放位置~/sensor_ws/src/beginner_tutorials/src
+#tf.cpp表示追踪远离门轴的二维码
+rosrun beginner_tutorials tf_with2ar
+#机器人状态数据由Qt获取
+
 
 ==========================================================================
 
@@ -193,18 +279,35 @@ git clone https://github.com/haomingw/dotfiles.git
 ==========================================================================
 
 #安装ROS Kinectic
+sudo gedit /etc/apt/sources.list
+deb http://mirrors.ustc.edu.cn/ubuntu/ xenial main restricted universe multiverse
+deb http://mirrors.ustc.edu.cn/ubuntu/ xenial-security main restricted universe multiverse
+deb http://mirrors.ustc.edu.cn/ubuntu/ xenial-updates main restricted universe multiverse
+deb http://mirrors.ustc.edu.cn/ubuntu/ xenial-proposed main restricted universe multiverse
+deb http://mirrors.ustc.edu.cn/ubuntu/ xenial-backports main restricted universe multiverse
+deb-src http://mirrors.ustc.edu.cn/ubuntu/ xenial main restricted universe multiverse
+deb-src http://mirrors.ustc.edu.cn/ubuntu/ xenial-security main restricted universe multiverse
+deb-src http://mirrors.ustc.edu.cn/ubuntu/ xenial-updates main restricted universe multiverse
+deb-src http://mirrors.ustc.edu.cn/ubuntu/ xenial-proposed main restricted universe multiverse
+deb-src http://mirrors.ustc.edu.cn/ubuntu/ xenial-backports main restricted universe multiverse
+
 software updates-> ubuntu software-> 前四项打勾
 sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
 #
 sudo sh -c '. /etc/lsb-release && echo "deb http://mirrors.ustc.edu.cn/ros/ubuntu/ $DISTRIB_CODENAME main" > /etc/apt/sources.list.d/ros-latest.list'
 
-sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
+#sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
+#sudo apt-key del 421C365BD9FF1F717815A3895523BAEEB01FA116
+sudo -E apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
 #如果遇到连接到keyserver的问题，可以在以上命令尝试替换hkp://pgp.mit.edu:80或hkp://keyserver.ubuntu.com:80
-sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F42ED6FBAB17C654
+#sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F42ED6FBAB17C654
 
 sudo apt-get update
+sudo apt-get upgrade
 sudo apt-get install ros-kinetic-desktop-full
 sudo rosdep init
+#解决网络原因，先将所需压缩包下载到本地，然后rosdep update
+https://blog.csdn.net/qiqiqiqi0000/article/details/114888657
 #error##打开hosts文件
 sudo gedit /etc/hosts
 #在文件末尾添加
@@ -307,6 +410,7 @@ https://blog.csdn.net/weixin_40512647/article/details/105719908
 
 
 #MoveIt!中的运动学插件ikfast的配置(以aubo_i5机械臂为例)
+#初次安装步骤
 原文链接：https://blog.csdn.net/fanky_chan/article/details/102547859?utm_medium=distribute.pc_aggpage_search_result.none-task-blog-2~all~first_rank_v2~rank_v25-1-102547859.nonecase&utm_term=aubo%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8&spm=1000.2123.3001.4430
 ---------------
 注意：实际步骤在生成cpp时根据openrave-robot.py "$MYROBOT_NAME".dae --info links中模型index数设置如下
@@ -329,7 +433,23 @@ https://github.com/crigroup/openrave-installation
 https://blog.csdn.net/Huster_mse/article/details/108725451
 #实际安装时候在openware环节cmake .. -DOSG_DIR=/usr/local/lib64/报错FCL
 
-
+###再次安装步骤
+cd ~/aubo_ws/src/aubo_robot/aubo_description/urdf
+粘贴 aubo_i5_robot.urdf.xacro、aubo_i5.urdf、aubo_i5.dae、ikfast61_manipulator_i5.cpp
+export MYROBOT_NAME="aubo_i5"
+export PLANNING_GROUP="manipulator_i5"
+export IKFAST_OUTPUT_PATH=`pwd`/ikfast61_"$PLANNING_GROUP".cpp
+export MOVEIT_IK_PLUGIN_PKG="$MYROBOT_NAME"_ikfast_"$PLANNING_GROUP"_plugin
+cd ~/aubo_ws/src
+catkin_create_pkg "$MOVEIT_IK_PLUGIN_PKG"
+cd ~/aubo_ws
+catkin_make
+rosrun moveit_kinematics create_ikfast_moveit_plugin.py "$MYROBOT_NAME" "$PLANNING_GROUP" "$MOVEIT_IK_PLUGIN_PKG" "$IKFAST_OUTPUT_PATH"
+catkin_make
+查看 rosed aubo_moveit_config/config/kinematics.yaml中
+manipulator_i5:
+  kinematics_solver: aubo_i5_manipulator_i5_kinematics/IKFastKinematicsPlugin
+则成功
 ================================================
 
 
@@ -393,7 +513,18 @@ g++ -o main main.cpp
 #aubo+linux+sdk+官方实例
 
 #首先安装qt creator
-https://blog.csdn.net/vitor_lxy/article/details/94215967
+官方下载地址 https://download.qt.io/archive/qt/ 选择Qt 5.9.9 linux
+chmod a+x qt-opensource-linux-x64-xxxx.run
+安装组件选择上Desktop gcc 64-bit
+sudo gedit /usr/bin/qtcreator
+QT_HOME更改为自己qt安装路径的bin目录
+#!/bin/sh 
+export QT_HOME=/home/xxxx/Qtxxx/Tools/QtCreator/bin 
+export QT_HOME=/home/xxxx/Qtxxx/Tools/QtCreator/bin 
+$QT_HOME/qtcreator $*
+sudo chmod a+x /usr/bin/qtcreator
+-----------------------------
+https://blog.csdn.net/qq_38441692/article/details/105158790
 #qt项目windows移植至linux
 qmake -project QT+=widgets
 qmake
@@ -425,6 +556,9 @@ rosrun handControl handControl_node
 rosrun handControl talker Enable 1
 rosrun handControl talker Open 1
 #手爪控制GUI
+ls -l /dev/ttyUSB*
+sudo chmod 666 /dev/ttyUSB*
+#
 chmod u+x run_Grip-Manager.sh
 chmod u+x Grip-Manager
 cd ~/Desktop/Grip-Manager-ubuntu-16.04-x64 
@@ -1145,6 +1279,14 @@ tar xvf linux-x64.tar.gz
 
 
 
+#PROBOT_Anno 安装
+#./bashrc 加入动态库连接
+export LD_LIBRARY_PATH="~/probot_anno_ws/src/probot_anno/probot_rviz_plugin/lib/moveIt":/home/liu/probot_anno_ws/devel/lib:/opt/ros/kinetic/lib:/opt/ros/kinetic/lib/x86_64-linux-gnu
+
+
+
+##ROS消息发布（publish）与订阅(subscribe)（C++代码详解）
+https://blog.csdn.net/weixin_44420419/article/details/111355655
 
 
 

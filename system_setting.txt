@@ -1,0 +1,514 @@
+
+#以下为校西606移动操作机器人基本操作和硬件操作中问题参考教程
+
+#维护者：刘传德
+#维护时间：2022年3月23日
+###我在github上建立了一个维护仓库https://github.com/Chuande-LIU/mobile-manipulator-seuee
+###后续新的硬件调试方面的试错和更新信息请新的维护者申请push或fork该仓库
+--------------------------------------------------------------------------------
+
+==========
+=注意事项1和2=
+==========
+---------------------------
+1、定期给机器人底盘充电，保持机器人内部电池可靠性。
+2、机端笔记本电脑请保持长期开机不休眠，其机器人外接插线板请注意长期供电。
+
+## 常挂机设置
+禁止休眠
+sudo systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target
+解除禁止休眠
+sudo systemctl unmask sleep.target suspend.target hibernate.target hybrid-sleep.target
+
+## 把cpu调整到性能模式
+sudo apt-get install cpufrequtils
+cpufreq-info
+sudo cpufreq-set -g performance
+--------------------
+链接：http://www.piggysnow.com/archives/308
+=================================
+
+
+==========
+==快速上手==
+==========
+------------------------------
+##启动手-臂-眼
+1、键盘启动控制手开合
+------------------------------------------
+#开启底盘供电开关，为手爪供电，看到手爪上绿色灯亮起即可。
+#记得结束后关闭底盘供电开关，否则手爪持续消耗底盘内部电池电力。
+
+rosrun handControl handControl_node
+rosrun handControl talker Enable 1
+rosrun handControl talker Open 1
+#手爪控制GUI
+ls -l /dev/ttyUSB*
+sudo chmod 666 /dev/ttyUSB*
+#
+chmod u+x run_Grip-Manager.sh
+chmod u+x Grip-Manager
+cd ~/Desktop/Grip-Manager-ubuntu-16.04-x64 
+./run_Grip-Manager.sh
+
+读取波特率为11520串口设备
+===========================
+
+2、启动臂
+-------------------------------------------
+#rviz中开启
+roslaunch aubo_i5_moveit_with_gripper_config moveit_planning_execution.launch sim:=false robot_ip:=127.0.0.1
+#连接实际机器人
+机器人上电后
+roslaunch aubo_i5_moveit_with_gripper_config moveit_planning_execution.launch sim:=false robot_ip:=192.168.1.4
+
+
+##AuboQtControl控制实际机器人
+由qt creator打开
+AuboInterfaceExample.pro执行对应文件即可。
+
+
+##AuboC++Control控制机器人
+##aubo-sdk-example
+aubo robot c++ sdk example
+## build step
+  1. cd src
+  2. mkdir build
+  3. cd build
+  4. cmake ..
+  5. make
+============================
+
+
+
+3-1、启动眼-usb摄像头
+------------------------------------------
+#Ubuntu16.04开启usb摄像头
+cd ~/sensor_ws/src
+git clone https://github.com/bosch-ros-pkg/usb_cam.git usb_cam
+catkin_make
+#
+roslaunch usb_cam usb_cam-test.launch
+
+#修改video0是电脑自身摄像头，修改video1是外接摄像头
+roscd usb_cam/launch
+sudo vi usb_cam-test.launch
+
+#摄像头校准
+https://blog.csdn.net/qq_25241325/article/details/82705003?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.channel_param&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.channel_param
+===================================
+
+3-2、启动眼-Kinect相机
+------------------------------------------
+roslaunch kinect2_bridge kinect2_bridge.launch
+roslaunch easy_handeye aubo_kinectv2_calibration.launch
+
+
+
+======================================
+
+#Teamviewer 安装
+sudo dpkg -i teamviewer_15.20.3_amd64.deb
+#报错
+sudo apt-get --fix-broken install
+
+
+##rosbag数据记录与回放
+
+mkdir ~/bagfiles
+cd ~/bagfiles
+rosbag record -a
+rosbag record /topic1
+
+#回放
+rosbag info <your bagfile>
+rosbag play <your bagfile>
+
+
+
+12 ROS+二维码
+sudo apt-get install ros-kinetic-ar-track-alvar
+opt->ros->kinetic->share->ar_track_alvar
+#古月居-ROS机器人开发实践358页
+roslaunch usb_cam usb_cam-test.launch
+roslaunch robot_vision ar_track_camera.launch
+#aubo i5 二维码伺服 eye on hand
+#ar marker ID 12
+roslaunch usb_cam usb_cam-test.launch
+roslaunch aubo_i5_moveit_config moveit_planning_execution.launch robot_ip:=127.0.0.1
+cd ~/catkin_ws/src/aubo_robot/aubo_demo/scripts
+rosrun aubo_demo aubo_i5_ar_track.py
+---------------------------------
+https://www.guyuehome.com/6873
+
+
+
+13 手柄测试界面
+sudo apt-get install jstest-gtk
+jstest-gtk
+
+
+14 Ubuntu下的串口助手cutecom
+sudo apt-get install cutecom
+sudo cutecom
+
+
+
+
+16 双网卡+linux+内外网
+
+route -n
+#wlp8s0无线网卡/enp9s0有线网卡
+#校园网
+sudo route add default gw 10.192.0.1
+------------------
+原文链接：https://www.jianshu.com/p/f8b7f034f044
+
+
+
+
+18 获取门转角数据
+#文件路径~/sensor_ws/src/beginner_tutorials/src/tf.cpp
+rosrun beginner_tutorials my_tf_listener 
+rqt_plot
+#查看话题其中linear.x=OP，linear.x=OQ，linear.z=OQP_angle
+/object_1/cmd_vel/linear
+#确保识别的物体ID从1开始，远离门轴的二维码为1，门轴的二维码为2
+rosbag record /object_1/cmd_vel
+#运算门转角度数并发布(30 pfs)
+#存放位置~/sensor_ws/src/beginner_tutorials/src
+#tf.cpp表示追踪远离门轴的二维码
+rosrun beginner_tutorials tf_with2ar
+#机器人状态数据由Qt获取
+
+
+==========================================================================
+
+#Ubuntu16.04 安装Rime
+sudo apt install ibus-rime
+sudo apt install librime-data-pinyin-simp
+
+系统设置"System setting"里的“Text entry”进行图形化界面“+”操作
+System setting-> language support-> Keyboard input method system-> IBus
+Ctrl~选择简体字
+
+==========================================================================
+
+
+==========================================================================
+
+#MoveIt!中的运动学插件ikfast的配置(以aubo_i5机械臂为例)
+#初次安装步骤
+原文链接：https://blog.csdn.net/fanky_chan/article/details/102547859?utm_medium=distribute.pc_aggpage_search_result.none-task-blog-2~all~first_rank_v2~rank_v25-1-102547859.nonecase&utm_term=aubo%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8&spm=1000.2123.3001.4430
+---------------
+注意：实际步骤在生成cpp时根据openrave-robot.py "$MYROBOT_NAME".dae --info links中模型index数设置如下
+export BASE_LINK="1"
+export EEF_LINK="7"
+
+这里要注意下在Setup Assistant中配置运动规划组时，Add a planning group called manipulator that names the kinematic chain between base_link and tool0。
+这里的设置要与这里一致，参照上面的关节数据：
+在aubo_i5.srdf中确定。
+<group name="manipulator_i5">
+        <chain base_link="base_link" tip_link="wrist3_Link" />
+-------------------
+https://blog.csdn.net/harrycomeon/article/details/95517129
+生成cpp过程大约耗时15分钟
+
+#实际安装时候在openware环节cmake .. -DOSG_DIR=/usr/local/lib64/报错
+#转为如下安装openware步骤
+https://github.com/crigroup/openrave-installation
+#并参考如下步骤
+https://blog.csdn.net/Huster_mse/article/details/108725451
+#实际安装时候在openware环节cmake .. -DOSG_DIR=/usr/local/lib64/报错FCL
+
+###再次安装步骤
+cd ~/aubo_ws/src/aubo_robot/aubo_description/urdf
+粘贴 aubo_i5_robot.urdf.xacro、aubo_i5.urdf、aubo_i5.dae、ikfast61_manipulator_i5.cpp
+export MYROBOT_NAME="aubo_i5"
+export PLANNING_GROUP="manipulator_i5"
+export IKFAST_OUTPUT_PATH=`pwd`/ikfast61_"$PLANNING_GROUP".cpp
+export MOVEIT_IK_PLUGIN_PKG="$MYROBOT_NAME"_ikfast_"$PLANNING_GROUP"_plugin
+cd ~/aubo_ws/src
+catkin_create_pkg "$MOVEIT_IK_PLUGIN_PKG"
+cd ~/aubo_ws
+catkin_make
+rosrun moveit_kinematics create_ikfast_moveit_plugin.py "$MYROBOT_NAME" "$PLANNING_GROUP" "$MOVEIT_IK_PLUGIN_PKG" "$IKFAST_OUTPUT_PATH"
+catkin_make
+查看 rosed aubo_moveit_config/config/kinematics.yaml中
+manipulator_i5:
+  kinematics_solver: aubo_i5_manipulator_i5_kinematics/IKFastKinematicsPlugin
+则成功
+================================================
+
+
+#aubo运行rviz和gezebo
+source aubo_ws/devel/setup.zsh
+roslaunch aubo_i5_moveit_config moveit_planning_execution.launch sim:=false robot_ip:=127.0.0.1
+source aubo_ws/devel/setup.zsh
+roslaunch aubo_demo MoveGroupInterface_To_Kinetic.launch
+roslaunch aubo_gazebo aubo_i5_gazebo_control.launch
+—————————————
+#超时报错解决：https://blog.csdn.net/sinat_38284212/article/details/101626539
+#rivz不能完全加載卸载moveit重装
+sudo apt-get remove ros-kinetic-moveit-*
+sudo apt-get install ros-kinetic-moveit
+
+—————————————
+解决方法：https://www.shangmayuan.com/a/a0bd4f0fa1be44f190a5d74d.html
+##roslaunch aubo_demo MoveGroupInterface_To_Kinetic.launch不能正常执行
+#注释掉其workspace以及删除于不用的workspace中编译产生的build和devel文件夹删去
+
+
+================================================
+
+#aubo二次开发控制柜与笔记本网线/wifi连接
+网线IP  192.168.1.3（笔记本）
+	192.168.1.4（aubo 控制柜）
+wifi IP 192.168.1.5（笔记本）
+	192.168.1.6（aubo 控制柜）
+掩码   255.255.255.0
+子网    192.168.1.1
+存在问题是：wifi连接时机械臂速度约束不够，运行卡顿。
+
+
+#aubo的C++控制examples调用
+cd ~/aubo_ws/src/aubo_robot/AuboInterfaceExample/
+g++ -o main main.cpp
+./main
+
+#aubo+linux+sdk+官方实例
+
+#首先安装qt creator
+https://blog.csdn.net/vitor_lxy/article/details/94215967
+#qt项目windows移植至linux
+qmake -project QT+=widgets
+qmake
+make
+
+==========================================================================
+
+#手柄控制aubo i5
+
+
+#labtop ip=192.168.1.3
+roslaunch aubo_i5_moveit_config moveit_planning_execution.launch sim:=false robot_ip:=192.168.1.4
+#planning->allow external comm.
+#add pose->topic->joy
+roslaunch aubo_i5_moveit_config joystick_control.launch dev:=/dev/input/js0
+
+==========================================================
+
+#手柄控制底盘
+#
+sudo apt install ros-kinetic-serial
+cd ~/base_ws
+rosrun serial_msgs serial_example_node1
+
+#航发底盘串口通讯CRC16为CRC-CCITT(XModem)
+#python crcmod实现crc16算法
+sudo apt-get install python-crcmod
+算法见链接：https://www.pythonf.cn/read/156369#_10
+--------------------------
+https://cloud.tencent.com/developer/article/1570611
+------------------------
+
+
+AA 20 20 15 00 C4 21 0D
+21C4为CRC码
+#航发底盘串口通信RS232-USB需要兼容ubuntu系统的串口线，否则PC/ubuntu无法控制
+#ROS与串口通信
+https://github.com/threefruits/ros_serial_code
+-----------------------------
+https://blog.csdn.net/Forrest_Z/article/details/55002484?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.control&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.control
+
+
+roscore //必须先运行
+rosrun my_serial_node my_serial_node
+
+##权限问题
+ls -l /dev/ttyUSB*
+sudo chmod 666 /dev/ttyUSB*
+
+
+===================================
+
+
+#KinectV2在ROS kinectic中调用libfreenect2和iai_kinect2
+
+#安装libfreenect2 自身驱动
+cd ~/catkin_ws/src 
+git clone https://github.com/OpenKinect/libfreenect2.git 
+cd libfreenect2 
+sudo apt-get install build-essential cmake pkg-config 
+sudo apt-get install libusb-1.0-0-dev 
+sudo apt-get install libturbojpeg libjpeg-turbo8-dev 
+sudo apt-get install libglfw3-dev 
+sudo apt-get install beignet-dev 
+sudo apt-get install libopenni2-dev 
+mkdir build && cd build 
+cmake .. -DCMAKE_INSTALL_PREFIX=$HOME/freenect2 
+make 
+make install 
+sudo cp ../platform/linux/udev/90-kinect2.rules /etc/udev/rules.d/ 
+sudo apt-get install openni2-utils && sudo make install-openni2 && NiViewer2 
+
+
+cd ~/catkin_ws/src/libfreenect2/build
+./bin/Protonect
+————————————————
+原文链接：https://blog.csdn.net/zhangjiali12011/java/article/details/97112978
+=============================================================================
+
+#KinectV2 ROS标定
+
+roscore
+rosrun kinect2_bridge kinect2_bridge _fps_limit:=2
+rosrun kinect2_calibration kinect2_calibration chess6x8x0.024 record color
+#标定文件位于
+~/sensor_ws/src/iai_kinect2/kinect2_bridge/data/008197364647
+
+roslaunch kinect2_bridge kinect2_bridge.launch
+rosrun kinect2_viewer kinect2_viewer
+---------------------------------------
+https://blog.csdn.net/weixin_39928309/article/details/83047473
+https://www.cnblogs.com/sasasatori/p/11794499.html
+https://github.com/code-iai/iai_kinect2/tree/master/kinect2_calibration
+
+
+=============================================================================
+
+#KinectV2在ROS中驱动
+#安装iai_kinect2
+cd ~/catkin_ws/src/
+git clone https://github.com/code-iai/iai_kinect2.git
+cd iai_kinect2
+rosdep install -r --from-paths .
+cd ~/catkin_ws
+catkin_make -DCMAKE_BUILD_TYPE="Release"
+
+
+roslaunch kinect2_bridge kinect2_bridge.launch
+rosrun kinect2_viewer kinect2_viewer
+————————————————
+原文链接：https://blog.csdn.net/zhangjiali12011/java/article/details/97112978
+
+
+===================================================================================
+
+#物体检测和识别功能（ROS下find_object_2d）
+
+#uvc carmera
+cd ~/catkin_ws/src
+git clone https://github.com/ktossell/camera_umd
+cd ~/catkin_ws
+#报错libv4l2.h
+sudo apt-get install libv4l-dev
+
+catkin_make
+source devel/setup.bash
+#
+sudo apt-get install ros-kinetic-find-object-2d
+
+
+cd ~/catkin_ws
+git clone https://github.com/introlab/find-object src/find_object_2d
+catkin_make
+
+#UVC摄像头find_object_2d
+roscore
+roslaunch usb_cam usb_cam-test.launch
+#修改sensor_ws/src/usb_cam/launch/video1
+rostopic list
+rosrun uvc_camera uvc_camera_node device:=/dev/video1
+#rosrun find_object_2d find_object_2d image:=/usb_cam/image_raw  #usb_cam使用
+rosrun find_object_2d find_object_2d image:=/image_raw   #uvc_camera使用
+#查看物体位置
+rosrun find_object_2d print_objects_detected
+rostopic echo /objects
+
+--------------------------
+https://blog.csdn.net/zbr794866300/article/details/100538794
+#
+https://blog.csdn.net/weixin_44827364/article/details/104318553?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachin
+eLearnPai2-5.control&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-5.control
+
+
+#KinectV2+ROS下find_object_2d
+roslaunch kinect2_bridge kinect2_bridge.launch
+rostopic list
+#rosrun find_object_2d find_object_2d image:=/camera/rgb/image_color
+rosrun find_object_2d find_object_2d image:=/kinect2/hd/image_color
+
+-------------------------------
+#通过ROS控制真实机械臂(16) --- 视觉抓取之find_object实现物体识别
+https://blog.csdn.net/qq_34935373/article/details/103757619
+#一起做ROS-DEMO系列 (2):基于find_object_2d的目标匹配识别
+https://zhuanlan.zhihu.com/p/71603204
+
+
+
+#KinectV2+ROS下find_object_3d
+roslaunch kinect2_bridge kinect2_bridge.launch publish_tf:=true
+#roslaunch kinect2_bridge kinect2_bridge.launch
+roslaunch find_object_2d find_object_3d_kinect2.launch
+rosrun find_object_2d print_objects_detected image:=/camera/color/image_raw
+------------------------
+#通过ROS控制真实机械臂(16) --- 视觉抓取之finTUd_object实现物体识别
+原文链接：https://blog.csdn.net/qq_34935373/article/details/103757619
+------------------------
+http://wiki.ros.org/find_object_2d
+
+
+
+=======================================================================================
+
+#kinect空格键从B到D保存深度图
+https://blog.csdn.net/sunbibei/article/details/51594824
+#同时读取Kinect的彩色图和深度图像并以时间戳作为文件名保存
+save_rgbd_from_kinect2 文件夹
+首先修改其中cpp的存储路径
+/home/chuande/recordData/RGBD，改为自己路径
+编译catkin_make save_rgbd_from_kinect2
+
+
+roslaunch kinect2_bridge kinect2_bridge.launch
+rosrun save_rgbd_from_kinect2 save_rgbd_from_kinect2
+数据存储路径
+/home/chuande/recordData/RGBD
+————————————————
+原文链接：https://blog.csdn.net/crp997576280/article/details/88377871
+
+
+
+==========================================================================
+
+
+#ROS 操作杆控制
+
+ls /dev/input/
+sudo jstest /dev/input/js0
+roscore
+rosrun joy joy_node
+rostopic echo joy
+
+————————————————
+原文链接：https://www.guyuehome.com/256
+https://blog.csdn.net/answerMack/article/details/89365769
+https://blog.csdn.net/qq_41834780/article/details/100106144
+https://blog.csdn.net/qq_34935373/article/details/95882217?utm_medium=distribute.pc_relevant.none-task-blog-utm_term-5&spm=1001.2101.3001.4242
+
+https://blog.csdn.net/sujun3304/article/details/18791843?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.channel_param&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.channel_param
+
+https://blog.csdn.net/sujun3304/article/details/18794077?utm_medium=distribute.pc_relevant.none-task-blog-searchFromBaidu-8.channel_param&depth_1-utm_source=distribute.pc_relevant.none-task-blog-searchFromBaidu-8.channel_param
+
+https://blog.csdn.net/Abril_/article/details/105586812?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522160221004019195246608498%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fall.%2522%257D&request_id=160221004019195246608498&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~first_rank_v2~rank_v28_p-2-105586812.pc_first_rank_v2_rank_v28_p&utm_term=%E6%89%8B%E6%9F%84+%E6%9C%BA%E5%99%A8%E4%BA%BA&spm=1018.2118.3001.4187
+
+
+
+
+
+
+
+
+
+

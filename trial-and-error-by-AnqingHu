@@ -1,0 +1,12 @@
+#1
+
+问题描述：
+安装搜狗输入法过程中，按照教程增删软件包后，重启发现菜单栏和侧边栏消失，仅有桌面，可以打开终端并运行指令。
+
+解决：
+在终端输入以下命令后恢复正常：
+sudo apt-get install –reinstall ubuntu-desktop
+sudo reboot
+
+参考教程：
+https://wenku.baidu.com/view/bfdd213cab114431b90d6c85ec3a87c240288aa9.html?_wkts_=1668044877883&bdQuery=ubuntu%E7%B3%BB%E7%BB%9F%E9%87%8D%E5%90%AF%E4%B8%8D%E6%98%BE%E7%A4%BA%E8%8F%9C%E5%8D%95%E6%A0%8F
